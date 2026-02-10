@@ -1,0 +1,86 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "valohai-llm"
+dynamic = ["version"]
+description = "Track LLM evaluations to Valohai LLM"
+readme = "README.md"
+license = "MIT"
+requires-python = ">=3.9"
+authors = [
+    { name = "Valohai", email = "info@valohai.com" },
+]
+keywords = [
+    "ai",
+    "evaluation",
+    "llm",
+    "machine-learning",
+    "valohai",
+]
+classifiers = [
+    "License :: OSI Approved :: MIT License",
+    "Natural Language :: English",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
+    "Topic :: Software Development :: Libraries",
+]
+dependencies = [
+    "httpx>=0.25",
+]
+
+[dependency-groups]
+dev = [
+    "pytest-cov>=7.0.0",
+    "pytest>=7.0",
+    "respx>=0.21",
+    "ruff>=0.14.14",
+]
+
+[project.urls]
+Homepage = "https://llm.valohai.com"
+Repository = "https://github.com/valohai/valohai-llm"
+
+[tool.coverage.report]
+exclude_also = [
+    '@(abc\.)?abstractmethod',
+    'class .*\bProtocol\):',
+    'def __repr__',
+    'except ImportError',
+    'if 0:',
+    'if TYPE_CHECKING:',
+    'raise AssertionError',
+    'raise NotImplementedError',
+]
+
+[tool.hatch.version]
+path = "src/valohai_llm/__init__.py"
+
+[tool.hatch.build.targets.sdist]
+exclude = [
+    "/.claude",
+    "/.github",
+    "/.idea",
+    "/.zed",
+    "/examples",
+    "/tests",
+    ".env",
+    ".env.*",
+    ".gitignore",
+    "justfile",
+    "uv.lock",
+]
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/valohai_llm"]
+
+[tool.ruff]
+line-length = 120
+
+[tool.ruff.lint]
+extend-select = ["COM812", "I", "B"]

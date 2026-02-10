@@ -1,0 +1,12 @@
+.claude/
+.idea/
+.zed/
+*.py[cod]
+__pycache__/
+*.egg-info/
+.coverage
+.env
+.venv
+dist/
+.pytest_cache/
+.ruff_cache/
