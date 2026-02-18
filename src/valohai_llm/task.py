@@ -244,7 +244,7 @@ def get_current_task() -> Task:
     url = f"{state.base_url.rstrip('/')}/api/current-task/"
     headers = {"Authorization": f"Bearer {state.api_key}"}
 
-    response = state.get_httpx_client().get(url, headers=headers)
+    response = state.request("GET", url, headers=headers)
     response.raise_for_status()
     data = response.json()
 

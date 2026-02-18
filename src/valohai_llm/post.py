@@ -59,7 +59,7 @@ def post_result(
         "Content-Type": "application/json",
     }
 
-    response = state.get_httpx_client().post(url, json=payload, headers=headers)
+    response = state.request("POST", url, json=payload, headers=headers)
     response.raise_for_status()
 
     return response.json()
