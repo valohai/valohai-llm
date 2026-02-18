@@ -81,9 +81,11 @@ class Task:
             filename = PurePosixPath(url_path).name
             local_path = temp_path / filename
             logger.info("Downloading dataset %s to %s", ds.name, local_path)
-            response = client.get(ds.download_url)
-            response.raise_for_status()
-            local_path.write_bytes(response.content)
+            with client.stream("GET", ds.download_url) as response:
+                response.raise_for_status()
+                with local_path.open("wb") as f:
+                    for chunk in response.iter_bytes():
+                        f.write(chunk)
             self._downloaded_paths[ds.name] = local_path
 
         return self._downloaded_paths
