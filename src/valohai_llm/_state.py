@@ -2,15 +2,22 @@
 
 from __future__ import annotations
 
+import logging
 import os
 import platform
 import sys
+import time
 from dataclasses import dataclass, field
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import httpx
 
 from valohai_llm.compat import uuid7
+
+if TYPE_CHECKING:
+    from httpx._types import HeaderTypes, QueryParamTypes
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass
@@ -49,6 +56,36 @@ class State:
         if self._httpx_client is None:
             self._httpx_client = httpx.Client(timeout=5)
         return self._httpx_client
+
+    def request(
+        self,
+        method: str,
+        url: str,
+        *,
+        json: Any | None = None,
+        params: QueryParamTypes | None = None,
+        headers: HeaderTypes | None = None,
+        max_retries: int = 3,
+    ) -> httpx.Response:
+        """Make an HTTP request with retry on transient failures (5xx, transport errors)."""
+        client = self.get_httpx_client()
+        response: httpx.Response | None = None
+        for attempt in range(max_retries):
+            is_last = attempt >= max_retries - 1
+            try:
+                response = client.request(method, url, json=json, params=params, headers=headers)
+                if response.status_code < 500 or is_last:
+                    break
+                delay = 2**attempt
+                logger.warning("Server error %s from %s, retrying in %ss...", response.status_code, url, delay)
+            except httpx.TransportError:
+                if is_last:
+                    raise
+                delay = 2**attempt
+                logger.warning("Request to %s failed, retrying in %ss...", url, delay, exc_info=True)
+            time.sleep(delay)
+        assert response is not None  # unreachable: max_retries >= 1
+        return response
 
 
 state = State()
