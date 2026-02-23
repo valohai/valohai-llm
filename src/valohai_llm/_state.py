@@ -12,6 +12,7 @@ from typing import TYPE_CHECKING, Any
 
 import httpx
 
+from valohai_llm._config import API_KEY_ENVVAR, URL_ENVVAR
 from valohai_llm.compat import uuid7
 
 if TYPE_CHECKING:
@@ -24,8 +25,8 @@ logger = logging.getLogger(__name__)
 class State:
     """Singleton holding runtime state."""
 
-    base_url: str = field(default_factory=lambda: os.environ.get("VALOHAI_LLM_URL", "https://llm.valohai.com"))
-    api_key: str | None = field(default_factory=lambda: os.environ.get("VALOHAI_LLM_API_KEY"))
+    base_url: str = field(default_factory=lambda: os.environ.get(URL_ENVVAR, "https://llm.valohai.com"))
+    api_key: str | None = field(default_factory=lambda: os.environ.get(API_KEY_ENVVAR))
     _run_id: str | None = field(default=None, repr=False)
     _metadata: dict[str, Any] | None = field(default=None, repr=False)
     _httpx_client: httpx.Client | None = field(default=None, repr=False)

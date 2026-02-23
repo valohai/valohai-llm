@@ -1,4 +1,4 @@
-from .logging import configure_logging
+from ._hooks import install_hooks as _install_hooks
 from .post import post_result
 from .task import get_current_task
 
@@ -8,4 +8,4 @@ __all__ = [
     "post_result",
 ]
 
-configure_logging()
+_install_hooks()
