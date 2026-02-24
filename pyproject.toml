@@ -46,6 +46,13 @@ dev = [
 Homepage = "https://llm.valohai.com"
 Repository = "https://github.com/valohai/valohai-llm"
 
+[project.optional-dependencies]
+langfuse = [
+    # Langfuse 3.12 is not compatible with Python 3.9.
+    # Langfuse 4.0 promises to be compatible with Python 3.14.
+    "langfuse>=3.12.0,<4.0; python_version >= '3.10' and python_version < '3.14'",
+]
+
 [tool.coverage.report]
 exclude_also = [
     '@(abc\.)?abstractmethod',

@@ -2,7 +2,7 @@ import logging
 import os
 import sys
 
-from valohai_llm._config import LOG_LEVEL_ENVVAR, NO_HOOKS_ENVVAR, is_envvar_truthy
+from valohai_llm._config import LOG_LEVEL_ENVVAR, NO_HOOKS_ENVVAR, NO_LANGFUSE_HOOK_ENVVAR, is_envvar_truthy
 
 
 def _configure_logging() -> None:
@@ -41,3 +41,7 @@ def install_hooks() -> None:
     if is_envvar_truthy(NO_HOOKS_ENVVAR):
         return
     _configure_logging()
+    if not is_envvar_truthy(NO_LANGFUSE_HOOK_ENVVAR):
+        from ._langfuse import install_langfuse_hook  # noqa: PLC0415 – late import on purpose
+
+        install_langfuse_hook()
