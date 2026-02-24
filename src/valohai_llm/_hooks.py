@@ -2,10 +2,12 @@ import logging
 import os
 import sys
 
+from valohai_llm._config import LOG_LEVEL_ENVVAR, NO_HOOKS_ENVVAR, is_envvar_truthy
 
-def configure_logging() -> None:
+
+def _configure_logging() -> None:
     """Configure logging for valohai_llm if VALOHAI_LLM_LOG is set to a valid level."""
-    log_level_str = os.environ.get("VALOHAI_LLM_LOG", "").upper()
+    log_level_str = os.environ.get(LOG_LEVEL_ENVVAR, "").upper()
     if not log_level_str:
         return
 
@@ -30,3 +32,12 @@ def configure_logging() -> None:
 
     handler.setLevel(level)
     logger.addHandler(handler)
+
+
+def install_hooks() -> None:
+    """Install hooks unless forbidden to."""
+    if os.environ.get("PYTEST_VERSION"):  # Running in tests, do not hook implicitly
+        return
+    if is_envvar_truthy(NO_HOOKS_ENVVAR):
+        return
+    _configure_logging()
