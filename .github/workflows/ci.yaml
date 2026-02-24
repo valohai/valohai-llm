@@ -19,6 +19,7 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
       - run: uv run --with=pytest-xdist pytest --dist=worksteal -nlogical -vv --durations=10 -rA
+      - run: uv run --all-extras --with=pytest-xdist pytest --dist=worksteal -nlogical -vv --durations=10 -rA
 
   lint:
     name: Lint
