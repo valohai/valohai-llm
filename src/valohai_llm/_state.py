@@ -96,7 +96,7 @@ class State:
                 delay = 2**attempt
                 logger.warning("Request to %s failed, retrying in %ss...", url, delay, exc_info=True)
             time.sleep(delay)
-        assert response is not None  # unreachable: max_retries >= 1
+        assert response is not None  # noqa: S101 – unreachable: max_retries >= 1
         return response
 
 

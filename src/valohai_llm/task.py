@@ -6,9 +6,10 @@ import itertools
 import logging
 import tempfile
 import time
+from collections.abc import Iterable, Iterator
 from dataclasses import dataclass, field
 from pathlib import Path, PurePosixPath
-from typing import TYPE_CHECKING, Any, Callable, Iterable, Iterator
+from typing import TYPE_CHECKING, Any, Callable
 from urllib.parse import urlparse
 from uuid import UUID
 

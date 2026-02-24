@@ -83,4 +83,21 @@ packages = ["src/valohai_llm"]
 line-length = 120
 
 [tool.ruff.lint]
-extend-select = ["COM812", "I", "B"]
+extend-select = [
+    "B",
+    "COM812",
+    "I",
+    "PLC",
+    "PLW",
+    "PT",
+    "S",
+    "T2",
+    "UP",
+]
+ignore = [
+    "PLW2901",
+]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**" = ["S101", "S106"]
+"examples/**" = ["T2", "S3"]

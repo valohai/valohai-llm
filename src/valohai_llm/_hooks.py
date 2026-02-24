@@ -20,7 +20,7 @@ def _configure_logging() -> None:
 
     handler: logging.Handler
     try:
-        import rich.logging
+        import rich.logging  # noqa: PLC0415 (late import on purpose)
 
         if sys.stderr.isatty():
             handler = rich.logging.RichHandler(rich_tracebacks=True)
