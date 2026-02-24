@@ -13,5 +13,5 @@ def test_run_id_is_stable_uuid7():
 
 def test_metadata_collected():
     metadata = state.get_metadata()
-    assert all(k in metadata for k in {"hostname", "system", "release", "machine", "python_version", "pid"})
+    assert all(k in metadata for k in ("hostname", "system", "release", "machine", "python_version", "pid"))
     assert metadata["pid"] == os.getpid()

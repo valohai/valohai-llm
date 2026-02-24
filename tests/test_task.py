@@ -1,3 +1,5 @@
+import json
+
 import httpx
 import pytest
 
@@ -82,7 +84,6 @@ def test_run_with_item_labels(respx_mock, mock_ingest, api_key):
 
     # Verify the posted request includes item labels
     request = mock_ingest.calls.last.request
-    import json
 
     body = json.loads(request.content)
     assert body["labels"]["category"] == "math"
@@ -113,7 +114,6 @@ def test_run_with_item_labels_missing_key(respx_mock, mock_ingest, api_key):
 
     # Verify "category" is NOT in labels since it's missing from the item
     request = mock_ingest.calls.last.request
-    import json
 
     body = json.loads(request.content)
     assert "category" not in body["labels"]
