@@ -28,7 +28,8 @@ class State:
     base_url: str = field(default_factory=lambda: os.environ.get(URL_ENVVAR, "https://llm.valohai.com"))
     api_key: str | None = field(default_factory=lambda: os.environ.get(API_KEY_ENVVAR))
     _run_id: str | None = field(default=None, repr=False)
-    _metadata: dict[str, Any] | None = field(default=None, repr=False)
+    _system_metadata: dict[str, Any] | None = field(default=None, repr=False)
+    _metadata: dict[str, Any] = field(default_factory=dict, repr=False)
     _httpx_client: httpx.Client | None = field(default=None, repr=False)
 
     def __post_init__(self) -> None:
@@ -40,10 +41,17 @@ class State:
             self._run_id = str(uuid7())
         return self._run_id
 
+    def reset(self) -> None:
+        """Only for test use."""
+        self._httpx_client = None
+        self._metadata = {}
+        self._run_id = None
+        self._system_metadata = None
+
     def get_metadata(self) -> dict[str, Any]:
-        if self._metadata is None:
+        if self._system_metadata is None:
             uname = platform.uname()
-            self._metadata = {
+            self._system_metadata = {
                 "hostname": uname.node,
                 "machine": uname.machine,
                 "pid": os.getpid(),
@@ -51,7 +59,10 @@ class State:
                 "release": uname.release,
                 "system": uname.system,
             }
-        return self._metadata
+        return {**self._system_metadata, **self._metadata}
+
+    def update_metadata(self, metadata: dict[str, Any]) -> None:
+        self._metadata.update(metadata)
 
     def get_httpx_client(self) -> httpx.Client:
         if self._httpx_client is None:

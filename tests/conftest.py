@@ -10,8 +10,7 @@ from valohai_llm.compat import uuid7
 @pytest.fixture(autouse=True)
 def reset_globals():
     """Reset global state before each test."""
-    _state.state._run_id = None
-    _state.state._metadata = None
+    _state.state.reset()
     yield
 
 
