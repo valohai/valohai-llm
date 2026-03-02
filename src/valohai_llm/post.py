@@ -3,11 +3,36 @@
 from __future__ import annotations
 
 import warnings
+from collections.abc import Generator
+from contextlib import contextmanager
 from typing import Any
 from uuid import UUID
 
 from valohai_llm._state import state
 from valohai_llm.compat import uuid7
+
+_active_collector: list[dict[str, Any]] | None = None
+
+
+@contextmanager
+def collect_results() -> Generator[list[dict[str, Any]], None, None]:
+    """Context manager that captures result payloads as they are posted.
+
+    Yields a list that accumulates the raw payload dicts sent to the server.
+    This is useful for feeding results to the viewer::
+
+        with valohai_llm.collect_results() as results:
+            task.run(my_fn)
+        valohai_llm.viewer.serve(results=results)
+    """
+    global _active_collector  # noqa: PLW0603
+    results: list[dict[str, Any]] = []
+    prev = _active_collector
+    _active_collector = results
+    try:
+        yield results
+    finally:
+        _active_collector = prev
 
 
 def post_result(
@@ -52,6 +77,9 @@ def post_result(
         "labels": labels or {},
         "metadata": merged_metadata,
     }
+
+    if _active_collector is not None:
+        _active_collector.append(payload)
 
     url = f"{state.base_url.rstrip('/')}/api/ingest/"
     headers = {
