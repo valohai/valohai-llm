@@ -170,47 +170,48 @@ class Task:
             dataset_name,
             item_id,
         )
-        try:
-            t0 = time.perf_counter()
-            metrics = fn(params=params, item=item)
-            duration = time.perf_counter() - t0
-        except Exception:
-            logger.exception(
-                "Evaluation failed for params=%r, item=%r (dataset=%s)",
-                params,
-                item,
-                dataset_name,
+        with state.eval_scope():
+            try:
+                t0 = time.perf_counter()
+                metrics = fn(params=params, item=item)
+                duration = time.perf_counter() - t0
+            except Exception:
+                logger.exception(
+                    "Evaluation failed for params=%r, item=%r (dataset=%s)",
+                    params,
+                    item,
+                    dataset_name,
+                )
+                return None
+
+            if not isinstance(metrics, dict):
+                logger.error(
+                    "Evaluation function returned %s instead of dict for params=%r (dataset=%s)",
+                    type(metrics).__name__,
+                    params,
+                    dataset_name,
+                )
+                return None
+
+            # Build labels from params
+            labels = {str(k): str(v) for k, v in params.items()}
+            if dataset_name is not None:
+                labels["dataset"] = dataset_name
+            if item_id is not None:
+                labels["item_id"] = str(item_id)
+
+            # Add item labels
+            if item_labels:
+                for key in item_labels:
+                    if key in item:
+                        labels[key] = str(item[key])
+
+            return post_result(
+                task=str(self.id),
+                metrics=metrics,
+                labels=labels,
+                metadata={"duration_seconds": duration},
             )
-            return None
-
-        if not isinstance(metrics, dict):
-            logger.error(
-                "Evaluation function returned %s instead of dict for params=%r (dataset=%s)",
-                type(metrics).__name__,
-                params,
-                dataset_name,
-            )
-            return None
-
-        # Build labels from params
-        labels = {str(k): str(v) for k, v in params.items()}
-        if dataset_name is not None:
-            labels["dataset"] = dataset_name
-        if item_id is not None:
-            labels["item_id"] = str(item_id)
-
-        # Add item labels
-        if item_labels:
-            for key in item_labels:
-                if key in item:
-                    labels[key] = str(item[key])
-
-        return post_result(
-            task=str(self.id),
-            metrics=metrics,
-            labels=labels,
-            metadata={"duration_seconds": duration},
-        )
 
     def cleanup(self) -> None:
         """Clean up downloaded datasets."""

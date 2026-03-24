@@ -13,6 +13,7 @@ from valohai_llm.compat import uuid7
 def post_result(
     *,
     task: str | UUID,
+    trace_id: str | UUID | None = None,
     metrics: dict[str, Any] | None = None,
     labels: dict[str, Any] | None = None,
     metadata: dict[str, Any] | None = None,
@@ -22,6 +23,7 @@ def post_result(
 
     Args:
         task: The task name/identifier (required)
+        trace_id: The tracing ID for cost attribution (optional, potentially auto-resolved if not provided)
         metrics: Numeric metrics that can be aggregated (e.g., {"accuracy": 0.85, "latency_ms": 150})
         labels: String dimensions for grouping (e.g., {"model": "gpt-4", "dataset": "mmlu"})
         metadata: Per-result metadata merged with global metadata (e.g., {"duration_seconds": 1.5})
@@ -44,14 +46,21 @@ def post_result(
 
     merged_metadata = {**state.get_metadata(), **(metadata or {})}
 
-    payload = {
+    payload: dict[str, Any] = {
         "id": str(uuid7()),
         "run_id": state.get_run_id(),
-        "task": task,
+        "task": str(task),
         "metrics": metrics or {},
         "labels": labels or {},
         "metadata": merged_metadata,
     }
+
+    if trace_id == "":
+        raise ValueError("trace_id cannot be an empty string")
+
+    resolved_trace_id = trace_id if trace_id is not None else state.get_trace_id()
+    if resolved_trace_id is not None:
+        payload["trace_id"] = str(resolved_trace_id)
 
     url = f"{state.base_url.rstrip('/')}/api/ingest/"
     headers = {
