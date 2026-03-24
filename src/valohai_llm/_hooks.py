@@ -48,10 +48,10 @@ def install_hooks() -> None:
         return
     _configure_logging()
     if not is_envvar_truthy(NO_LANGFUSE_HOOK_ENVVAR):
-        from ._langfuse import install_langfuse_hook  # noqa: PLC0415 – late import on purpose
+        from .integrations._langfuse import install_langfuse_hook  # noqa: PLC0415 – late import on purpose
 
         install_langfuse_hook()
     if not is_envvar_truthy(NO_PROXY_HOOK_ENVVAR):
-        from ._proxy_hook import install_proxy_hook  # noqa: PLC0415 – late import on purpose
+        from .integrations._proxy_hook import install_proxy_hook  # noqa: PLC0415 – late import on purpose
 
         install_proxy_hook()

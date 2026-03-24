@@ -7,9 +7,9 @@ import httpx
 import pytest
 import requests
 
-import valohai_llm._proxy_hook as proxy_hook_mod
-from valohai_llm._proxy_hook import HEADER_RUN_ID, _parse_host, install_proxy_hook
+import valohai_llm.integrations._proxy_hook as proxy_hook_mod
 from valohai_llm._state import state
+from valohai_llm.integrations._proxy_hook import HEADER_RUN_ID, _parse_host, install_proxy_hook
 
 PROXY_URL = "https://llm-proxy.example.com"
 PROXY_CHAT_URL = "https://llm-proxy.example.com/v1/chat/completions"
