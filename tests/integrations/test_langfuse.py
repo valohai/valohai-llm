@@ -13,8 +13,8 @@ from langfuse._client.resource_manager import LangfuseResourceManager
 from langfuse._utils.prompt_cache import PromptCacheRefreshConsumer
 from langfuse.version import __version__ as langfuse_version
 
-from valohai_llm._langfuse import TRACE_URL_METADATA_KEY, get_existing_client, install_langfuse_hook
 from valohai_llm._state import state
+from valohai_llm.integrations._langfuse import TRACE_URL_METADATA_KEY, get_existing_client, install_langfuse_hook
 
 if sys.version_info >= (3, 14) and langfuse_version.startswith("3"):
     pytest.skip("Langfuse 3.x is not compatible with Python 3.14", allow_module_level=True)
