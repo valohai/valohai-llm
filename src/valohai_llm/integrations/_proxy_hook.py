@@ -15,6 +15,7 @@ from valohai_llm._state import state
 logger = logging.getLogger(__name__)
 
 HEADER_RUN_ID = "X-VH-Run-Id"
+HEADER_TRACE_ID = "X-VH-Trace-Id"
 
 _proxy_host: tuple[str, int | None] | None = None
 
@@ -31,7 +32,14 @@ def _get_proxy_headers(request_host: str, request_port: int | None) -> dict[str,
         return None
     if request_host.lower() != _proxy_host[0] or request_port != _proxy_host[1]:
         return None
-    return {HEADER_RUN_ID: state.get_run_id()}
+
+    headers = {HEADER_RUN_ID: state.get_run_id()}
+
+    trace_id = state.get_trace_id()
+    if trace_id is not None:
+        headers[HEADER_TRACE_ID] = trace_id
+
+    return headers
 
 
 # -- httpx -------------------------------------------------------------------

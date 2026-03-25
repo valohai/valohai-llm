@@ -2,11 +2,13 @@
 
 from __future__ import annotations
 
+import contextlib
 import logging
 import os
 import platform
 import sys
 import time
+from collections.abc import Generator
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Any
 
@@ -28,6 +30,7 @@ class State:
     base_url: str = field(default_factory=lambda: os.environ.get(URL_ENVVAR, "https://llm.valohai.com"))
     api_key: str | None = field(default_factory=lambda: os.environ.get(API_KEY_ENVVAR))
     _run_id: str | None = field(default=None, repr=False)
+    _trace_id_stack: list[str] = field(default_factory=list, repr=False)
     _system_metadata: dict[str, Any] | None = field(default=None, repr=False)
     _metadata: dict[str, Any] = field(default_factory=dict, repr=False)
     _httpx_client: httpx.Client | None = field(default=None, repr=False)
@@ -41,11 +44,59 @@ class State:
             self._run_id = str(uuid7())
         return self._run_id
 
+    def get_trace_id(self) -> str | None:
+        return self._trace_id_stack[-1] if self._trace_id_stack else None
+
+    def start_eval(self) -> str:
+        """
+        Start an evaluation scope for cost tracing and return the trace ID.
+
+        Automatically called if using `task.run()` or `with eval_scope()`.
+        """
+        trace_id = str(uuid7())
+        self._trace_id_stack.append(trace_id)
+        return trace_id
+
+    def finish_eval(self) -> None:
+        """
+        Finish the current evaluation scope.
+
+        Automatically called if using `task.run()` or `with eval_scope()`.
+        """
+        if self._trace_id_stack:
+            self._trace_id_stack.pop()
+
+    @contextlib.contextmanager
+    def eval_scope(self) -> Generator[str, None, None]:
+        """
+        Mark a code section where triggered LLM API calls are considered to
+        be part of the same evaluation for cost tracing.
+
+        Usage:
+        ```
+        # inside the scope, trace id is auto-resolved
+        with valohai_llm.eval_scope():
+            response = client.chat(...)
+            post_result(task="my-task", metrics={...})
+
+        # outside the scope, you pass trace id manually
+        with valohai_llm.eval_scope() as trace_id:
+            response = client.chat(...)
+        post_result(task="my-task", trace_id=trace_id, metrics={...})
+        ```
+        """
+        trace_id = self.start_eval()
+        try:
+            yield trace_id
+        finally:
+            self.finish_eval()
+
     def reset(self) -> None:
         """Only for test use."""
         self._httpx_client = None
         self._metadata = {}
         self._run_id = None
+        self._trace_id_stack.clear()
         self._system_metadata = None
 
     def get_metadata(self) -> dict[str, Any]:

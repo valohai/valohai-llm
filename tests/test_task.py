@@ -3,6 +3,8 @@ import json
 import httpx
 import pytest
 
+from valohai_llm import eval_scope
+from valohai_llm._state import state
 from valohai_llm.compat import uuid7
 from valohai_llm.parsers import DatasetParseError
 from valohai_llm.task import DatasetInfo, Task, get_current_task
@@ -117,6 +119,61 @@ def test_run_with_item_labels_missing_key(respx_mock, mock_ingest, api_key):
 
     body = json.loads(request.content)
     assert "category" not in body["labels"]
+
+
+def test_eval_scope_nesting():
+    with eval_scope() as outer_id:
+        with eval_scope() as middle_id:
+            with eval_scope() as inner_id:
+                assert state.get_trace_id() == inner_id
+            assert state.get_trace_id() == middle_id
+        assert state.get_trace_id() == outer_id
+
+    assert state.get_trace_id() is None
+    assert len({outer_id, middle_id, inner_id}) == 3
+
+
+def test_run_sets_unique_trace_id_during_evaluation_function(mock_ingest, api_key):
+    captured_trace_ids = []
+
+    def fn(*, params, item):
+        captured_trace_ids.append(state.get_trace_id())
+        return {"score": 1.0}
+
+    task = Task(id=uuid7(), name="test", parameters={"n": [1, 2]}, datasets=[])
+    task.run(fn)
+
+    assert len(captured_trace_ids) == 2
+    assert all(trace_id is not None for trace_id in captured_trace_ids)
+    assert captured_trace_ids[0] != captured_trace_ids[1]
+
+    assert state.get_trace_id() is None
+
+
+def test_run_clears_trace_id_on_error(mock_ingest, api_key):
+    def fn(*, params, item):
+        raise ValueError("boom")
+
+    task = Task(id=uuid7(), name="test", parameters={"n": [1]}, datasets=[])
+    task.run(fn)
+
+    assert state.get_trace_id() is None
+
+
+def test_run_includes_trace_id_on_result_payload(mock_ingest, api_key):
+    captured_trace_ids = []
+
+    def fn(*, params, item):
+        captured_trace_ids.append(state.get_trace_id())
+        return {"score": 1.0}
+
+    task = Task(id=uuid7(), name="test", parameters={}, datasets=[])
+    task.run(fn)
+
+    request = mock_ingest.calls.last.request
+    body = json.loads(request.content)
+    assert len(captured_trace_ids) == 1
+    assert body["trace_id"] == captured_trace_ids[0]
 
 
 def test_get_current_task(respx_mock, base_url, api_key):
